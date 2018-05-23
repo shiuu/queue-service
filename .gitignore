@@ -1,0 +1,6 @@
+.classpath
+.project
+.settings/
+nigel*
+target/
+.DS_Store
