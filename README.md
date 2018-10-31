@@ -60,8 +60,10 @@ The code under the com.example package.
 
 4. SqsQueueService.java: an sqs-based version of the interface.
 
-5. Unit tests (incluging test the behavior of the visibility timeout).
+5. Config file: src/main/resources/config.properties.
+
+6. Unit tests (incluging test the behavior of the visibility timeout).
 
 ##Building and Running
-You can use Maven to build and run tests from the command-line with:
+You can use Maven to run tests from the command-line with:
   mvn package
