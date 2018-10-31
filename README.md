@@ -1,8 +1,8 @@
-#Message Queues
+# Message Queues
 
 This project is an implementation of message queue with basic features.
 
-##Background
+## Background
 
 Message queues are a ubiquitous mechanism for achieving horizontal scalability.
 However, many production message services (e.g., Amazon's SQS) do not come with
@@ -43,7 +43,7 @@ staging, production, etc).
    consumer.
 
 
-##Code Structure
+## Code Structure
 
 The code under the com.example package.
 1. QueueService.java: the interface to cater for the essential queue actions:
@@ -64,6 +64,6 @@ The code under the com.example package.
 
 6. Unit tests (incluging test the behavior of the visibility timeout).
 
-##Building and Running
+## Building and Running
 You can use Maven to run tests from the command-line with:
   mvn package
