@@ -44,15 +44,17 @@ public class InMemoryQueueService implements QueueService {
     }
 
     long nowTime = now();
-    Message msg = queue.stream().filter(m -> m.isVisibleAt(nowTime)).findFirst().orElse(null);
-    if (msg == null) {
+    Optional<Message> msgOpt = queue.stream().filter(m -> m.isVisibleAt(nowTime)).findFirst();
+    if (msgOpt.isEmpty()) {
       return null;
-    }
-    msg.setReceiptId(UUID.randomUUID().toString());
-    msg.incrementAttempts();
-    msg.setVisibleFrom(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(visibilityTimeout));
+    } else {
+      Message msg = msgOpt.get();
+      msg.setReceiptId(UUID.randomUUID().toString());
+      msg.incrementAttempts();
+      msg.setVisibleFrom(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(visibilityTimeout));
 
-    return new Message(msg.getBody(), msg.getReceiptId());
+      return new Message(msg.getBody(), msg.getReceiptId());
+    }
   }
 
   @Override
@@ -61,11 +63,13 @@ public class InMemoryQueueService implements QueueService {
     if (queue != null) {
       long nowTime = now();
 
-      Optional<Message> msg =
-          queue.stream()
-              .filter(m -> !m.isVisibleAt(nowTime) && m.getReceiptId().equals(receiptId))
-              .findFirst();
-      msg.stream().forEach(m -> queue.remove(msg));
+      for (Iterator<Message> it = queue.iterator(); it.hasNext(); ) {
+        Message msg = it.next();
+        if (!msg.isVisibleAt(nowTime) && msg.getReceiptId().equals(receiptId)) {
+          it.remove();
+          break;
+        }
+      }
     }
   }
 
