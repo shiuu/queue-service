@@ -4,11 +4,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-public class InMemoryQueueService implements QueueService {
-  private final Map<String, Queue<Message>> queues;
+public class InMemoryQueueService implements PriorityQueueService  {
+  private final Map<String, PriorityBlockingQueue<PriorityMessage>> queues;
 
   private long visibilityTimeout;
 
@@ -27,46 +27,51 @@ public class InMemoryQueueService implements QueueService {
   }
 
   @Override
-  public void push(String queueUrl, String msgBody) {
-    Queue<Message> queue = queues.get(queueUrl);
+  public void push(String queueUrl, String msgBody, int rank) {
+    // priority --> numerically lowest rank, lowest time, message
+    PriorityBlockingQueue<PriorityMessage> queue = queues.get(queueUrl);
     if (queue == null) {
-      queue = new ConcurrentLinkedQueue<>();
+      queue = new PriorityBlockingQueue<PriorityMessage>();
       queues.put(queueUrl, queue);
     }
-    queue.add(new Message(msgBody));
+    Long now = now();
+    PriorityMessage priorityMessage = new PriorityMessage(rank,now, new Message(msgBody));
+    queue.add(priorityMessage);
   }
 
   @Override
   public Message pull(String queueUrl) {
-    Queue<Message> queue = queues.get(queueUrl);
+    PriorityBlockingQueue<PriorityMessage> queue = queues.get(queueUrl);
     if (queue == null) {
       return null;
     }
-
     long nowTime = now();
-    Optional<Message> msgOpt = queue.stream().filter(m -> m.isVisibleAt(nowTime)).findFirst();
-    if (msgOpt.isEmpty()) {
-      return null;
-    } else {
-      Message msg = msgOpt.get();
-      msg.setReceiptId(UUID.randomUUID().toString());
-      msg.incrementAttempts();
-      msg.setVisibleFrom(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(visibilityTimeout));
 
-      return new Message(msg.getBody(), msg.getReceiptId());
+    while (!queue.isEmpty()) {
+      PriorityMessage priorityMessage = queue.poll();
+      if (priorityMessage == null) {
+        return null;
+      } else {
+        Message msg = priorityMessage.getMesssage();
+        msg.setReceiptId(UUID.randomUUID().toString());
+        msg.incrementAttempts();
+        msg.setVisibleFrom(nowTime + TimeUnit.SECONDS.toMillis(visibilityTimeout));
+  
+        return new Message(msg.getBody(), msg.getReceiptId());
+      }
     }
+    return null;
   }
 
   @Override
   public void delete(String queueUrl, String receiptId) {
-    Queue<Message> queue = queues.get(queueUrl);
+    PriorityBlockingQueue<PriorityMessage> queue = queues.get(queueUrl);
     if (queue != null) {
       long nowTime = now();
-
-      for (Iterator<Message> it = queue.iterator(); it.hasNext(); ) {
-        Message msg = it.next();
-        if (!msg.isVisibleAt(nowTime) && msg.getReceiptId().equals(receiptId)) {
-          it.remove();
+      for (PriorityMessage priorityMessage : queue) {
+        Message message = priorityMessage.getMesssage();
+        if (!message.isVisibleAt(nowTime) && message.getReceiptId().equals(receiptId)) {
+          queue.remove(priorityMessage);
           break;
         }
       }

@@ -5,12 +5,15 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
 
 public class InMemoryQueueTest {
-	private QueueService qs;
+	private PriorityQueueService qs;
 	private String queueUrl = "https://sqs.ap-1.amazonaws.com/007/MyQueue";
+	public static Logger logger = LogManager.getLogger(InMemoryQueueTest.class);
 	
 	@Before
 	public void setup() {
@@ -20,8 +23,11 @@ public class InMemoryQueueTest {
 	
 	@Test
 	public void testSendMessage(){
-		qs.push(queueUrl, "Good message!");
+		qs.push(queueUrl, "Good message!",1);
+		logger.info(queueUrl);
 		Message msg = qs.pull(queueUrl);
+		logger.info(msg.toString());
+		logger.info(msg.getBody());
 
 		assertNotNull(msg);
 		assertEquals("Good message!", msg.getBody());
@@ -31,7 +37,7 @@ public class InMemoryQueueTest {
 	public void testPullMessage(){
 		String msgBody = "{ \"name\":\"John\", \"age\":30, \"car\":null }";
 		
-		qs.push(queueUrl, msgBody);
+		qs.push(queueUrl, msgBody,1);
 		Message msg = qs.pull(queueUrl);
 
 		assertEquals(msgBody, msg.getBody());
@@ -46,7 +52,7 @@ public class InMemoryQueueTest {
 	
 	@Test
 	public void testDoublePull(){
-		qs.push(queueUrl, "Message A.");
+		qs.push(queueUrl, "Message A.",1);
 		qs.pull(queueUrl);
 		Message msg = qs.pull(queueUrl);
 		assertNull(msg);
@@ -56,7 +62,7 @@ public class InMemoryQueueTest {
 	public void testDeleteMessage(){
 		String msgBody = "{ \"name\":\"John\", \"age\":30, \"car\":null }";
 		
-		qs.push(queueUrl, msgBody);
+		qs.push(queueUrl, msgBody,1);
 		Message msg = qs.pull(queueUrl);
 
 		qs.delete(queueUrl, msg.getReceiptId());
@@ -77,9 +83,9 @@ public class InMemoryQueueTest {
 				"        \"car3\":\"Fiat\"\n" + 
 				"    }\n" + 
 				" }"};
-		qs.push(queueUrl, msgStrs[0]);
-		qs.push(queueUrl, msgStrs[1]);
-		qs.push(queueUrl, msgStrs[2]);
+		qs.push(queueUrl, msgStrs[0],1);
+		qs.push(queueUrl, msgStrs[1],2);
+		qs.push(queueUrl, msgStrs[2],3);
 		Message msg1 = qs.pull(queueUrl);
 		Message msg2 = qs.pull(queueUrl);
 		Message msg3 = qs.pull(queueUrl);
@@ -90,14 +96,13 @@ public class InMemoryQueueTest {
 	
 	@Test
 	public void testAckTimeout(){
-		InMemoryQueueService queueService = new InMemoryQueueService() {
+		PriorityQueueService queueService = new InMemoryQueueService() {
 			long now() {
 				return System.currentTimeMillis() + 1000 * 30 + 1;
 			}
 		};
 		
-		queueService.push(queueUrl, "Message A.");
-		queueService.pull(queueUrl);
+		queueService.push(queueUrl, "Message A.",1);
 		Message msg = queueService.pull(queueUrl);
 		assertTrue(msg != null && msg.getBody() == "Message A.");
 	}
