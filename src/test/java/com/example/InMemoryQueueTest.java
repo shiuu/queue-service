@@ -24,10 +24,7 @@ public class InMemoryQueueTest {
 	@Test
 	public void testSendMessage(){
 		qs.push(queueUrl, "Good message!",1);
-		logger.info(queueUrl);
 		Message msg = qs.pull(queueUrl);
-		logger.info(msg.toString());
-		logger.info(msg.getBody());
 
 		assertNotNull(msg);
 		assertEquals("Good message!", msg.getBody());
