@@ -30,7 +30,7 @@ public class RedisQueueServiceTest {
         redisQueueService.push("test.com", "Push testing",1);
         Message message = redisQueueService.pull("test.com");
         
-        assertEquals("Hello testing", message.getBody());
+        assertEquals("Push testing", message.getBody());
         assertTrue(message.getReceiptId() != null && message.getReceiptId().length() > 0);
     }
 }
