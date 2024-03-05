@@ -24,9 +24,6 @@ public class RedisQueueService implements PriorityQueueService {
     private final Gson gson = new GsonBuilder().serializeNulls().create();
 
     public RedisQueueService() {
-        this.jedis = new Jedis("apn1-pet-wombat-34614.upstash.io", 34614, true);
-        this.jedis.auth("a60ea24024a240a09842e11688682b6b");
-
         String propFileName = "config.properties";
         Properties confInfo = new Properties();
         try (InputStream inStream = getClass().getClassLoader().getResourceAsStream(propFileName)) {
@@ -35,6 +32,13 @@ public class RedisQueueService implements PriorityQueueService {
             e.printStackTrace();
         }
         this.visibilityTimeout = Integer.parseInt(confInfo.getProperty("visibilityTimeout", "30"));
+        
+        final String host = confInfo.getProperty("host", "apn1-pet-wombat-34614.upstash.io");
+        final int port = Integer.parseInt(confInfo.getProperty("port", "34614"));
+        final boolean isSSL = Boolean.parseBoolean(confInfo.getProperty("ssl", "true"));
+        
+        this.jedis = new Jedis(host,port,isSSL);
+        this.jedis.auth(confInfo.getProperty("password", "None"));
     }
 
     @Override
