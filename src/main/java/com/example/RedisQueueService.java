@@ -86,6 +86,11 @@ public class RedisQueueService implements PriorityQueueService {
             Set<String> members = this.jedis.zrange(queueUrl, 0, -1);
             for (String member : members) {
                 logger.info(member);
+                PriorityMessage priorityMessage = gson.fromJson(member, PriorityMessage.class);
+                Message message = priorityMessage.getMessage();
+                if (message.getReceiptId() != null && message.getReceiptId().equals(receiptId)) {
+                    this.jedis.zrem(queueUrl, member);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
