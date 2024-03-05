@@ -82,7 +82,14 @@ public class RedisQueueService implements PriorityQueueService {
 
     @Override
     public void delete(String queueUrl, String receiptId) {
-        
+        try {
+            Set<String> members = this.jedis.zrange(queueUrl, 0, -1);
+            for (String member : members) {
+                logger.info(member);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     
     long now() {
@@ -105,6 +112,8 @@ public class RedisQueueService implements PriorityQueueService {
         if (message != null) {
             System.out.println(message.getBody() + message.getReceiptId() + message.getAttempts());
         }
+
+        redisQueueService.delete("abc.com", "123");
         
     }
 }   
