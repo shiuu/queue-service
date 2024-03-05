@@ -12,6 +12,11 @@ public class Message {
 
   private String msgBody;
 
+
+  Message() {
+    
+  }
+
   Message(String msgBody) {
     this.msgBody = msgBody;
   }
