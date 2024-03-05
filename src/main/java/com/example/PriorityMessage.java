@@ -1,21 +1,27 @@
 package com.example;
 
-public class PriorityMessage implements Comparable<PriorityMessage>{
+import java.io.Serializable;
+
+public class PriorityMessage implements Comparable<PriorityMessage>,Serializable{
     private Integer rank;
     private Long time; 
     private Message message;
+
+    public PriorityMessage() {
+        
+    }
     
-    public PriorityMessage(Integer rank, Long time, Message message) {
+    public PriorityMessage(Integer rank, Long time, Message msg) {
         this.rank = rank;
         this.time = time;
-        this.message = message;
+        this.message = msg;
     }
 
     public Integer getRank() {
         return rank;
     }
 
-    public void setFirst(Integer rank) {
+    public void setRank(Integer rank) {
         this.rank = rank;
     }
 
@@ -28,7 +34,7 @@ public class PriorityMessage implements Comparable<PriorityMessage>{
     }
 
 
-    public Message getMesssage() {
+    public Message getMessage() {
         return message;
     }
 

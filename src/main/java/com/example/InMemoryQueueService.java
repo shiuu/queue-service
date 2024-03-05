@@ -52,7 +52,7 @@ public class InMemoryQueueService implements PriorityQueueService  {
       if (priorityMessage == null) {
         return null;
       } else {
-        Message msg = priorityMessage.getMesssage();
+        Message msg = priorityMessage.getMessage();
         msg.setReceiptId(UUID.randomUUID().toString());
         msg.incrementAttempts();
         msg.setVisibleFrom(nowTime + TimeUnit.SECONDS.toMillis(visibilityTimeout));
@@ -69,7 +69,7 @@ public class InMemoryQueueService implements PriorityQueueService  {
     if (queue != null) {
       long nowTime = now();
       for (PriorityMessage priorityMessage : queue) {
-        Message message = priorityMessage.getMesssage();
+        Message message = priorityMessage.getMessage();
         if (!message.isVisibleAt(nowTime) && message.getReceiptId().equals(receiptId)) {
           queue.remove(priorityMessage);
           break;
